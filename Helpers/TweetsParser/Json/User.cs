@@ -13,7 +13,7 @@
         public bool verified { get; set; }
         public int followers_count { get; set; }
         public int friends_count { get; set; }
-        public int listed_count { get; set; }
+        public int? listed_count { get; set; }
         public int favourites_count { get; set; }
         public int statuses_count { get; set; }
         public string created_at { get; set; }

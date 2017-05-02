@@ -1,0 +1,51 @@
+java_base_version="8"
+java_sub_version="11"
+java_base_build="14"
+
+java_version="${java_base_version}u${java_sub_version}"
+java_build="b${java_base_build}"
+java_version_with_build="${java_version}-${java_build}"
+
+wget --no-cookies --header "Cookie: gpw_e24=xxx; oraclelicense=accept-securebackup-cookie;" "http://download.oracle.com/otn-pub/java/jdk/${java_version_with_build}/jdk-${java_version}-linux-x64.rpm"
+
+sudo rpm -i jdk-${java_version}-linux-x64.rpm
+
+Check if the default java version is set to Sun Java 8 SDK
+java -version
+
+sudo /usr/sbin/alternatives --install /usr/bin/java java /usr/java/jdk1.${java_base_version}.0_${java_sub_version}/bin/java 20000
+Set the Sun Java 8 SDK as the default java
+
+sudo /usr/sbin/alternatives --config java
+
+# Download and install Confluent Platform 3.0.0 from ZIP archive
+wget http://packages.confluent.io/archive/3.0/confluent-3.0.0-2.11.zip
+unzip confluent-3.0.0-2.11.zip
+
+cd confluent-3.0.0/
+
+# Start ZooKeeper.  Run this command in its own terminal.
+./bin/zookeeper-server-start ./etc/kafka/zookeeper.properties
+
+# Start Kafka.  Run this command in its own terminal
+./bin/kafka-server-start ./etc/kafka/server.properties
+
+./bin/kafka-topics --create \
+          --zookeeper localhost:2181 \
+          --replication-factor 1 \
+          --partitions 1 \
+          --topic streams-file-input
+
+echo -e "all streams lead to kafka\nhello kafka streams\njoin kafka summit" > /tmp/file-input.txt
+
+cat /tmp/file-input.txt | ./bin/kafka-console-producer --broker-list localhost:9092 --topic streams-file-input
+
+./bin/kafka-run-class org.apache.kafka.streams.examples.wordcount.WordCountDemo
+
+./bin/kafka-console-consumer --zookeeper localhost:2181 \
+          --topic streams-wordcount-output \
+          --from-beginning \
+          --formatter kafka.tools.Default-,0MessageFormatter \
+          --property print.key=true \
+          --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer \
+          --property value.deserializer=org.apache.kafka.common.serialization.LongDeserializer

@@ -1,8 +1,5 @@
-﻿using System;
+﻿using System.Configuration;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TweetsParser
 {
@@ -10,9 +7,11 @@ namespace TweetsParser
     {
         static void Main(string[] args)
         {
+            var inputDirectory = ConfigurationManager.AppSettings["inputDirectory"];
+            var outputFormat = ConfigurationManager.AppSettings["outputFormat"].Replace("\\t", "\t");
+
             var controller = new Controller();
-            controller.JoinTweets();
-        }
-            
+            controller.Generate(inputDirectory, outputFormat, "10/07", 1);
+        }  
     }
 }
