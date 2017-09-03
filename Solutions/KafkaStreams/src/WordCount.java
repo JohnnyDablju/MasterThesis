@@ -13,15 +13,29 @@ import java.util.*;
 
 public class WordCount {
     public static void main(String[] args) throws Exception {
-        Properties props = new Properties();
-        props.put(StreamsConfig.APPLICATION_ID_CONFIG, UUID.randomUUID().toString());//"WordCount");
-        props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-        props.put(StreamsConfig.KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
-        props.put(StreamsConfig.VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
-        props.put(StreamsConfig.TIMESTAMP_EXTRACTOR_CLASS_CONFIG, WallclockTimestampExtractor.class);
-        //props.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 0);
-        //props.put(ConsumerConfig.GROUP_ID_CONFIG, UUID.randomUUID().toString());
-        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        if (args == null){
+            args = new String[6];
+            args[0] = "localhost:9092";
+            args[1] = "localhost:2181";
+            args[2] = "8";
+            args[3] = "C:\\Git\\MasterThesis\\Experiments\\WordCount\\KafkaStreams\\";
+            args[4] = "0";
+            args[5] = "/tmp/kafka-streams";
+        }
+
+        Properties properties = new Properties();
+        properties.put(StreamsConfig.APPLICATION_ID_CONFIG, "KafkaStreamsWordCountApplication");//UUID.randomUUID().toString()
+        properties.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, args[0]);
+        properties.put(StreamsConfig.ZOOKEEPER_CONNECT_CONFIG, args[1]);
+        properties.put(StreamsConfig.CLIENT_ID_CONFIG, args[2]);
+        properties.put(StreamsConfig.KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
+        properties.put(StreamsConfig.VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
+        properties.put(StreamsConfig.STATE_DIR_CONFIG, args[5]);
+        properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        properties.put(StreamsConfig.NUM_STREAM_THREADS_CONFIG, args[2]);
+        //properties.put(StreamsConfig.REPLICATION_FACTOR_CONFIG, 0);
+        //properties.put(StreamsConfig.TIMESTAMP_EXTRACTOR_CLASS_CONFIG, WallclockTimestampExtractor.class);
+        //properties.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 0);
 
         KStreamBuilder builder = new KStreamBuilder();
         KStream<String, String> source = builder.stream(Serdes.String(), Serdes.String(),"WordCountInput");
@@ -38,20 +52,17 @@ public class WordCount {
                     return list;
                 }
             })
-            .groupByKey(Serdes.String(), Serdes.serdeFrom(new Tuple2Serializer(), new Tuple2Deserializer()))//OK
+            .groupByKey(Serdes.String(), Serdes.serdeFrom(new Tuple2Serializer(), new Tuple2Deserializer()))
             .reduce(new Reducer<Tuple2>() {
                 @Override
                 public Tuple2 apply(Tuple2 a, Tuple2 b) {
-                    //if (a != null && b != null) {
                     return new Tuple2(a.count + b.count, Math.max(a.timestamp, b.timestamp));
-                    //}
-                    //return null;
                 }
             }, "reduction")
             .mapValues(record -> String.format("%d\t%d\t%d", record.timestamp, System.currentTimeMillis(), record.count))
-            .writeAsText("C:\\Git\\MasterThesis\\Experiments\\WordCount\\KafkaStreams\\0");
+            .writeAsText(args[3] + args[4]);
 
-        KafkaStreams streams = new KafkaStreams(builder, props);
+        KafkaStreams streams = new KafkaStreams(builder, properties);
         streams.cleanUp();
         streams.start();
         Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
