@@ -1,5 +1,9 @@
 data
 experiments
+*.pem
+
+deployment/package/kafka
+deployment/package/flink
 
 
 # Compiled class file

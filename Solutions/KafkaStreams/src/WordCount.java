@@ -27,7 +27,7 @@ public class WordCount {
         properties.put(StreamsConfig.APPLICATION_ID_CONFIG, "KafkaStreamsWordCountApplication");//UUID.randomUUID().toString()
         properties.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, args[0]);
         properties.put(StreamsConfig.ZOOKEEPER_CONNECT_CONFIG, args[1]);
-        properties.put(StreamsConfig.CLIENT_ID_CONFIG, args[2]);
+        properties.put(StreamsConfig.CLIENT_ID_CONFIG, args[4]);
         properties.put(StreamsConfig.KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
         properties.put(StreamsConfig.VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
         properties.put(StreamsConfig.STATE_DIR_CONFIG, args[5]);

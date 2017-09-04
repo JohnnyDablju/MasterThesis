@@ -15,6 +15,7 @@ namespace OutputAnalyser.IO
             {
                 using (var reader = new StreamReader(filePath))
                 {
+                    var nodeId = Convert.ToByte(Path.GetFileNameWithoutExtension(filePath));
                     while (!reader.EndOfStream)
                     {
                         var line = reader.ReadLine().Remove(0, 32);
@@ -27,7 +28,7 @@ namespace OutputAnalyser.IO
                             StartTimestamp = Convert.ToInt64(parts[0]),
                             EndTimestamp = Convert.ToInt64(parts[1]),
                             TotalWordCount = Convert.ToInt32(parts[2].Remove(parts[2].IndexOf("<-"))),
-                            NodeId = 0,
+                            NodeId = nodeId,
                             ThreadId = 0
                         });
                         //AddToDictionary(word);

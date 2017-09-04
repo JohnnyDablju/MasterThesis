@@ -8,6 +8,6 @@ sudo chmod -R 700 /mt
 4. complete information about hosts in file and zookeeperSetup
 5. sync those files
 6. run initial
-/mt/kafkaPackage/scripts/01_setup.sh
-source /mt/kafkaPackage/scripts/02_zookeeperSetup.sh
+/mt/package/scripts/01_setup.sh
+source /mt/package/scripts/02_zookeeperSetup.sh
 7. run scripts in order

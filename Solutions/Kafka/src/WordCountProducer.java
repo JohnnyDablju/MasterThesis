@@ -34,10 +34,11 @@ public class WordCountProducer {
 
         Producer<String, String> producer = new KafkaProducer<>(properties);
         for (int i = 0; i < tweets.size(); i++){
-            if (i % 100000 == 0)
+            if (i % 1000000 == 0)
                 System.out.printf("%d records have been produced.\n", i+1);
             producer.send(new ProducerRecord<String, String>(args[2], tweets.get(i)));
         }
         producer.close();
+        System.out.println("Producing records finished.");
     }
 }

@@ -1,39 +1,36 @@
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.functions.ReduceFunction;
-import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
-import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.core.fs.FileSystem;
 import org.apache.flink.streaming.api.TimeCharacteristic;
-import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.timestamps.AscendingTimestampExtractor;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer010;
-import org.apache.flink.streaming.connectors.kafka.FlinkKafkaProducer010;
 import org.apache.flink.streaming.util.serialization.SimpleStringSchema;
 import org.apache.flink.util.Collector;
 
-import java.util.Arrays;
 import java.util.Properties;
-import java.util.UUID;
 
 public class WordCount {
     public static void main(String[] args) throws Exception {
-        Properties inputProperties = new Properties();
-        inputProperties.setProperty("bootstrap.servers", "localhost:9092");
-        inputProperties.setProperty("group.id", UUID.randomUUID().toString());
-        inputProperties.setProperty("auto.offset.reset", "earliest");
+        if (args == null){
+            args = new String[3];
+            args[0] = "localhost:9092";
+            args[1] = "1";
+            args[2] = "C:\\Git\\MasterThesis\\Experiments\\WordCount\\flink";
+        }
+
+        Properties properties = new Properties();
+        properties.setProperty("bootstrap.servers", args[0]);
+        properties.setProperty("group.id", "FlinkWordCountGroup");
+        properties.setProperty("auto.offset.reset", "earliest");
 
         StreamExecutionEnvironment environment = StreamExecutionEnvironment.getExecutionEnvironment();
+        environment.setParallelism(Integer.parseInt(args[1]));
         environment.setStreamTimeCharacteristic(TimeCharacteristic.IngestionTime);
-        // ingestion time doesnt need assigning time
-        // event time works as expected
-        // processing time fails without assignment
-        //environment.setParallelism(1);
 
         environment
-            .addSource(new FlinkKafkaConsumer010<>("WordCountInput", new SimpleStringSchema(), inputProperties))
+            .addSource(new FlinkKafkaConsumer010<>("WordCountInput", new SimpleStringSchema(), properties))
             .flatMap(new FlatMapFunction<String, Tuple3<String, Integer, Long>>() {
                 @Override
                 public void flatMap(String message, Collector<Tuple3<String, Integer, Long>> record) {
@@ -56,12 +53,8 @@ public class WordCount {
                     return String.format("%d\t%d\t%s\t%d", record.f2, System.currentTimeMillis(), record.f0, record.f1);
                 }
             })
-            .writeAsText("C:\\Git\\MasterThesis\\Experiments\\WordCount\\flink", FileSystem.WriteMode.OVERWRITE);
-        /*Properties outputProperties = new Properties();
-        outputProperties.setProperty("bootstrap.servers", "localhost:9092");
-        FlinkKafkaProducer010.FlinkKafkaProducer010Configuration producer = FlinkKafkaProducer010.writeToKafkaWithTimestamps(wordCount, "WordCountOutput", new SimpleStringSchema(), outputProperties);
-        producer.setWriteTimestampToKafka(true); //obligatory*/
+            .writeAsText(args[2], FileSystem.WriteMode.OVERWRITE);
 
-        environment.execute("FlinkWordCount");
+        environment.execute("FlinkWordCountApplication");
     }
 }

@@ -28,6 +28,8 @@ namespace OutputAnalyser
                 case "Spark": reader = new SparkReader(frameworkDirectory, outputSeparator); break;
                 case "Flink": reader = new FlinkReader(frameworkDirectory, outputSeparator); break;
             }
+            Console.WriteLine("Enter description:");
+            var description = Console.ReadLine();
             Console.WriteLine("{0}\tReading messages...", DateTime.Now);
             reader.Read();
             Console.WriteLine("{0}\tProcessing messages...", DateTime.Now);
@@ -37,7 +39,7 @@ namespace OutputAnalyser
             Console.WriteLine("{0}\t\tGenerating report...", DateTime.Now);
             var report = analysis.GetReport();
             Console.WriteLine("{0}\tWriting report...", DateTime.Now);
-            new Writer().Write(report, analysisDirectory, frameworkName, reportHeader, reportFormat);
+            new Writer().Write(report, analysisDirectory, frameworkName, reportHeader, reportFormat, description);
         }
     }
 }

@@ -13,8 +13,8 @@ namespace OutputAnalyser.IO
         {
             foreach (var filePath in Directory.EnumerateFiles(directory))
             {
-                var threadId = Convert.ToByte(Path.GetFileName(filePath));
-                ProcessFile(filePath, 0, threadId);
+                var fileName = Convert.ToInt32(Path.GetFileName(filePath));
+                ProcessFile(filePath, Convert.ToByte(fileName/4), Convert.ToByte(fileName%4));
             }
         }
     }
