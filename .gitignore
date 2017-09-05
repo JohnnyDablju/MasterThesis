@@ -4,6 +4,7 @@ experiments
 
 deployment/package/kafka
 deployment/package/flink
+deployment/package/spark
 
 
 # Compiled class file

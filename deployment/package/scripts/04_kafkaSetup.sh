@@ -6,7 +6,7 @@ screen -d -m ${packageDir}/kafka/bin/kafka-server-start.sh \
 ${packageDir}/config/server'${PSSH_NODENUM}'.properties
 #topic creation
 ${packageDir}/kafka/bin/kafka-topics.sh --create \
---zookeeper ${zookeeperHost} \
+--zookeeper ${zookeeperFullIp} \
 --replication-factor 1 \
 --partitions 32 \
 --topic ${kafkaTopic}

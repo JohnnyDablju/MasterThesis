@@ -1,9 +1,12 @@
 # setting up variables
+user="ec2-user"
 # zookeeper
-masterIp="172.31.10.163"
-zookeeperHost=${masterIp}":2181"
+zookeeperIp="172.31.1.58"
+zookeeperFullIp=${zookeeperIp}":2181"
+zookeeperHost=${user}@${zookeeperIp}
 # other ips
-flinkMasterHost="172.31.5.212"
+masterIp="172.31.7.38"
+masterHost=${user}@${masterIp}
 # directories
 packageDir="/mt/package"
 tmpDir="/tmp"
@@ -27,7 +30,7 @@ echo "y" | sudo yum install pssh
 sudo chmod -R 600 ${keyPairPath}
 # preparing kafka config
 sed -ie '$d' ${packageDir}/config/server*.properties
-echo 'zookeeper.connect='${zookeeperHost} | tee -a ${packageDir}/config/server*.properties
+echo 'zookeeper.connect='${zookeeperFullIp} | tee -a ${packageDir}/config/server*.properties
 # starting the zookeeper server in separate tab
 screen -d -m ${packageDir}/kafka/bin/zookeeper-server-start.sh \
 ${packageDir}/config/zookeeper.properties
