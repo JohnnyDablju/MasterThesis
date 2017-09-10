@@ -9,7 +9,7 @@ namespace OutputAnalyser.IO
     {
         public SparkReader(string directory, char separator) : base(directory, separator) { }
 
-        public override void Read()
+        protected override void EnumerateFiles(Action action, long? timestampBoundary)
         {
             foreach (var timestampDirectory in Directory.EnumerateDirectories(directory))
             {
@@ -18,8 +18,7 @@ namespace OutputAnalyser.IO
                     var fileName = Path.GetFileName(filePath);
                     if (fileName.Contains("part") && !fileName.Contains("crc"))
                     {
-                        var threadId = Convert.ToByte(Path.GetFileName(filePath).Substring(5));
-                        ProcessFile(filePath, 0, threadId);
+                        ProcessFile(action, filePath, timestampBoundary);
                     }
                 }
             }

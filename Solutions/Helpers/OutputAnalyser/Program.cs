@@ -30,15 +30,16 @@ namespace OutputAnalyser
             }
             Console.WriteLine("Enter description:");
             var description = Console.ReadLine();
-            Console.WriteLine("{0}\tReading messages...", DateTime.Now);
-            reader.Read();
-            Console.WriteLine("{0}\tProcessing messages...", DateTime.Now);
-            var analysis = new Analysis(reader.GetMessages(), frameworkName == "Flink");
-            Console.WriteLine("{0}\t\tGenerating batches...", DateTime.Now);
-            analysis.GetBatches();
-            Console.WriteLine("{0}\t\tGenerating report...", DateTime.Now);
-            var report = analysis.GetReport();
+            Console.WriteLine("Words per message?");
+            var wordsPerMessage = Convert.ToInt32(Console.ReadLine());
+            Console.WriteLine("{0}\tGetting processing start timestamp...", DateTime.Now);
+            var startTimestamp = reader.GetStartTimestamp();
+            Console.WriteLine("{0}\tStarting processing...", DateTime.Now);
+            var analysis = new Analysis(startTimestamp, wordsPerMessage);
+            var readManager = new ReadManager(reader, analysis);
+            readManager.Process(startTimestamp);
             Console.WriteLine("{0}\tWriting report...", DateTime.Now);
+            var report = analysis.GetReport();
             new Writer().Write(report, analysisDirectory, frameworkName, reportHeader, reportFormat, description);
         }
     }

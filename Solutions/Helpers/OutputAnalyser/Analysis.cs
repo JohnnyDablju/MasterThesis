@@ -9,116 +9,129 @@ namespace OutputAnalyser
 {
     class Analysis
     {
-        public Analysis(List<Message> messages, bool wordPerMessage)
+        public Analysis(long startTimestamp, int wordsPerMessage)
         {
-            this.messages = messages;
-            //this.dictionary = dictionary;
-            this.DetermineProcessedWordCount(wordPerMessage);
-            batches = null;
-            report = null;
+            this.startTimestamp = startTimestamp;
+            this.wordsPerMessage = wordsPerMessage;
+            report = new List<ReportItem>();
+            countsBuffer = new Dictionary<string, int>();
         }
 
-        //private Dictionary<string, List<int>> dictionary;
+        private int wordsPerMessage;
+        private long startTimestamp;
         private List<Message> messages;
         private List<Batch> batches;
         private List<ReportItem> report;
+        private Dictionary<string, int> countsBuffer;
 
-        private void DetermineProcessedWordCount(bool wordPerMessage)
+        public void AddSecond(int second, List<Message> messages)
         {
-            /*Parallel.ForEach(messages, message =>
+            if (messages.Count > 0)
             {
-                var maxWordCount = 0;
-                dictionary[message.Word].ForEach(i =>
-                {
-                    var wordCount = messages[i].TotalWordCount;
-                    if (wordCount < message.TotalWordCount && wordCount > maxWordCount)
-                    {
-                        maxWordCount = wordCount;
-                    }
-                });
-                message.ProcessedWordCount = maxWordCount != 0
-                    ? message.TotalWordCount - maxWordCount
-                    : message.TotalWordCount;
+                this.messages = messages;
+                Console.WriteLine("{0}\t\t\tPreprocessing messages...", DateTime.Now);
+                PreprocessMessages();
+                Console.WriteLine("{0}\t\t\tCompiling batches...", DateTime.Now);
+                CompileBatches();
+                Console.WriteLine("{0}\t\t\tAdding to report...", DateTime.Now);
+                AddToReport(second);
+            }
+            else
+            {
+                Console.WriteLine("{0}\t\t\tNo messages.", DateTime.Now);
+            }
+        }
 
-            });*/
-            if (wordPerMessage)
+        public List<ReportItem> GetReport()
+        {
+            return report;
+        }
+
+        private void PreprocessMessages()
+        {
+            if (wordsPerMessage != 1)
             {
-                foreach (var message in messages)
+                messages = messages
+                    .OrderBy(m => m.Word)
+                    .ThenBy(m => m.TotalWordCount)
+                    .ToList();
+
+                messages[0].ProcessedWordCount = CalculateProcessedWordCount(messages[0]);
+                for (var i = 1; i < messages.Count; i++)
                 {
-                    message.ProcessedWordCount = 1;
+                    if (messages[i].Word == messages[i - 1].Word)
+                    {
+                        messages[i].ProcessedWordCount = messages[i].TotalWordCount - messages[i - 1].TotalWordCount;
+                        HandleCountsBuffer(messages[i]);
+                    }
+                    else
+                    {
+                        messages[i].ProcessedWordCount = CalculateProcessedWordCount(messages[i]);
+                    }
                 }
             }
             else
             {
-                messages = messages
-                .OrderBy(m => m.Word)
-                .ThenBy(m => m.TotalWordCount)
-                .ToList();
-                messages[0].ProcessedWordCount = messages[0].TotalWordCount;
-
-                for (var i = 1; i < messages.Count; i++)
-                {
-                    /*if (messages[i - 1].EndTimestamp > messages[i].EndTimestamp)
-                    {
-                        throw new Exception("Possible anomaly found");
-                    }*/
-                    if (messages[i].Word == messages[i - 1].Word)
-                    {
-                        messages[i].ProcessedWordCount = messages[i].TotalWordCount - messages[i - 1].TotalWordCount;
-                    }
-                    else
-                    {
-                        messages[i].ProcessedWordCount = messages[i].TotalWordCount;
-                    }
-                }
+                messages.ForEach(m => m.ProcessedWordCount = 1);
             }
         }
 
         private void CompileBatches()
         {
             batches = messages
-                .GroupBy(m => new { m.StartTimestamp, m.EndTimestamp }, (key, messageGroup) => new Batch
+                .GroupBy(m => new { m.InputTimestamp, m.OutputTimestamp }, (key, messageGroup) => new Batch
                 {
-                    StartTimestamp = key.StartTimestamp,
-                    EndTimestamp = key.EndTimestamp,
+                    InputTimestamp = key.InputTimestamp,
+                    OutputTimestamp = key.OutputTimestamp,
                     WordCount = messageGroup.Sum(m => m.ProcessedWordCount.Value),
                     MessageCount = messageGroup.Count()
                 })
                 .ToList();
         }
 
-        private void CompileReport()
+        private void AddToReport(int second)
         {
-            var startTimestamp = batches.Min(b => b.StartTimestamp);
-            report = batches
-                .GroupBy(b => (b.EndTimestamp - startTimestamp) / 1000, (second, batchGroup) => new ReportItem
+            report.Add(
+                new ReportItem
                 {
-                    Second = Convert.ToInt32(second),
-                    MessageCount = batchGroup.Sum(b => b.MessageCount),
-                    WordCount = batchGroup.Sum(b => b.WordCount),
-                    AverageLatency = Convert.ToInt32(batchGroup.Average(b => b.EndTimestamp - b.StartTimestamp))
-                })
-                .OrderBy(r => r.Second)
-                .ToList();
+                    Second = second,
+                    MessageCount = batches.Sum(b => b.MessageCount),
+                    WordCount = batches.Sum(b => b.WordCount),
+                    AverageLatency = Convert.ToInt32
+                    (
+                        batches.Sum(b => (b.OutputTimestamp - b.InputTimestamp) * b.MessageCount) 
+                        / 
+                        batches.Sum(b => b.MessageCount)
+                    )
+                }
+            );
         }
 
-        public List<Batch> GetBatches()
+        private void HandleCountsBuffer(Message message)
         {
-            if (batches == null)
+            if (!countsBuffer.ContainsKey(message.Word))
             {
-                CompileBatches();
+                countsBuffer.Add(message.Word, message.TotalWordCount);
             }
-            return batches;
+            else
+            {
+                countsBuffer[message.Word] = message.TotalWordCount;
+            }
         }
 
-        public List<ReportItem> GetReport()
+        private int CalculateProcessedWordCount(Message message)
         {
-            GetBatches();
-            if (report == null)
+            var count = 0;
+            if (countsBuffer.ContainsKey(message.Word))
             {
-                CompileReport();
+                count = message.TotalWordCount - countsBuffer[message.Word];
             }
-            return report;
+            else
+            {
+                count = message.TotalWordCount;
+            }
+            HandleCountsBuffer(message);
+            return count;
         }
     }
 }
