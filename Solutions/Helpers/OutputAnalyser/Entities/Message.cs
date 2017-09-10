@@ -8,7 +8,7 @@
         public int TotalWordCount { get; set; }
         public int? ProcessedWordCount { get; set; }
 
-        public byte NodeId { get; set; }
-        public byte ThreadId { get; set; }
+        //public byte NodeId { get; set; }
+        //public byte ThreadId { get; set; }
     }
 }

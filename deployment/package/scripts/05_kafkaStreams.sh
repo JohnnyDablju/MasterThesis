@@ -8,7 +8,7 @@ pssh -i \
 -h ${streamHostsPath} \
 -x "-i ${keyPairPath}" \
 screen -d -m java -jar ${packageDir}/jars/KafkaStreams.jar \
-${kafkaHosts} ${zookeeperFullIp} 8 ${dataDir}/KafkaStreams/ '${PSSH_NODENUM}' ${tmpDir}/kafka-streams
+${kafkaHosts} ${kafkaTopic} ${dataDir}/KafkaStreams/ '${PSSH_NODENUM}' 4 0 0
 # checking status
 pssh -i \
 -h ${streamHostsPath} \

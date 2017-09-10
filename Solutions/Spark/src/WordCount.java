@@ -2,7 +2,9 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.FlatMapFunction;
+import org.apache.spark.api.java.function.VoidFunction;
 import org.apache.spark.streaming.Duration;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.apache.spark.streaming.kafka010.ConsumerStrategies;
@@ -15,31 +17,32 @@ import java.util.*;
 public class WordCount {
     public static void main(String[] args) throws Exception {
         if (args == null || args.length == 0){
-            args = new String[4];
-            args[0] = "localhost:9092";
-            args[1] = "1000";
-            args[2] = "C:\\Apache\\hadoop\\";
-            args[3] = "C:\\Git\\MasterThesis\\Experiments\\WordCount\\spark\\";
+            args = new String[6];
+            args[0] = "localhost:9092"; // brokers
+            args[1] = "WordCountInputC"; // topic
+            args[2] = "C:\\Git\\MasterThesis\\experiments\\_singleWordCount\\Spark\\"; // output directory
+            args[3] = "local[*]"; // master address
+            args[4] = "1000"; // batch interval
+            args[5] = "C:\\Apache\\hadoop\\"; // hadoop directory
         }
 
         Map<String, Object> kafkaParams = new HashMap<>();
         kafkaParams.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, args[0]);
         kafkaParams.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         kafkaParams.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        kafkaParams.put(ConsumerConfig.GROUP_ID_CONFIG, "SparkWordCountGroup");
+        kafkaParams.put(ConsumerConfig.GROUP_ID_CONFIG, "SWCG_" + System.currentTimeMillis());
         kafkaParams.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        //kafkaParams.put("enable.auto.commit", false);
+        kafkaParams.put("enable.auto.commit", false);
 
-        System.setProperty("hadoop.home.dir", args[2]);
+        System.setProperty("hadoop.home.dir", args[5]);
 
-        Collection<String> topics = Arrays.asList("WordCountInput");
+        Collection<String> topics = Arrays.asList(args[1]);
 
         SparkConf sparkConfig = new SparkConf()
-            .setAppName("SparkWordCountApplication");
-            //.setMaster(args[1])
-            //.setJars(new String[]{"/mt/package/jars/Spark/Spark.jar", "/mt/package/jars/Spark/spark-core_2.11-2.2.0.jar", "/mt/package/jars/Spark/spark-streaming-kafka-0-10_2.11-2.2.0.jar"});
+            .setMaster(args[3])
+            .setAppName("SWCA_" + System.currentTimeMillis());
 
-        JavaStreamingContext streamingContext = new JavaStreamingContext(sparkConfig, new Duration(Integer.parseInt(args[1])));
+        JavaStreamingContext streamingContext = new JavaStreamingContext(sparkConfig, new Duration(Integer.parseInt(args[4])));
 
         KafkaUtils
             .createDirectStream(streamingContext, LocationStrategies.PreferConsistent(), ConsumerStrategies.<String, String>Subscribe(topics, kafkaParams))
@@ -49,7 +52,7 @@ public class WordCount {
                     ArrayList<Tuple2<String, Long>> list = new ArrayList<>();
                     Long currentTimestamp = System.currentTimeMillis();
                     for (String word : message.value().toLowerCase().split("\\W+")){
-                        list.add(new Tuple2<>(message.value(), currentTimestamp));
+                        list.add(new Tuple2<>(word, currentTimestamp));
                     }
                     return list.iterator();
                 }
@@ -57,8 +60,14 @@ public class WordCount {
             .mapToPair(record -> new Tuple2<>(record._1, new Tuple2<>(1, record._2)))
             .reduceByKey((a, b) -> new Tuple2<>(a._1 + b._1, Math.max(a._2, b._2)))
             .map(record -> String.format("%d\t%d\t%s\t%d", record._2._2, System.currentTimeMillis(), record._1, record._2._1))
+            /*.foreachRDD(new VoidFunction<JavaRDD<String>>() {
+                @Override
+                public void call(JavaRDD<String> rdd) throws Exception {
+                    rdd.saveAsTextFile(outputPath);
+                }
+            });*/
             .dstream()
-            .saveAsTextFiles(args[3], "");
+            .saveAsTextFiles(args[2], "");
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override

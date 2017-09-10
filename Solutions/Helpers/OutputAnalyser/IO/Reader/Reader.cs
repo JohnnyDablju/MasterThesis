@@ -37,8 +37,8 @@ namespace OutputAnalyser.IO
                         EndTimestamp = Convert.ToInt64(line[1]),
                         Word = line[2],
                         TotalWordCount = Convert.ToInt32(line[3]),
-                        NodeId = nodeId,
-                        ThreadId = threadId
+                        //NodeId = nodeId,
+                        //ThreadId = threadId
                     });
                     //AddToDictionary(line[2]);
                 }

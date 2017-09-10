@@ -13,24 +13,25 @@ import java.util.Properties;
 
 public class WordCount {
     public static void main(String[] args) throws Exception {
-        if (args == null){
-            args = new String[3];
+        if (args == null || args.length == 0){
+            args = new String[4];
             args[0] = "localhost:9092";
-            args[1] = "1";
-            args[2] = "C:\\Git\\MasterThesis\\Experiments\\WordCount\\flink";
+            args[1] = "WordCountInput";
+            args[2] = "C:\\Git\\MasterThesis\\experiments\\_singleWordCount\\Flink";
+            args[3] = "4";
         }
 
         Properties properties = new Properties();
         properties.setProperty("bootstrap.servers", args[0]);
-        properties.setProperty("group.id", "FlinkWordCountGroup");
+        properties.setProperty("group.id", "FWCG_" + System.currentTimeMillis());
         properties.setProperty("auto.offset.reset", "earliest");
 
         StreamExecutionEnvironment environment = StreamExecutionEnvironment.getExecutionEnvironment();
-        environment.setParallelism(Integer.parseInt(args[1]));
+        environment.setParallelism(Integer.parseInt(args[3]));
         environment.setStreamTimeCharacteristic(TimeCharacteristic.IngestionTime);
 
         environment
-            .addSource(new FlinkKafkaConsumer010<>("WordCountInput", new SimpleStringSchema(), properties))
+            .addSource(new FlinkKafkaConsumer010<>(args[1], new SimpleStringSchema(), properties))
             .flatMap(new FlatMapFunction<String, Tuple3<String, Integer, Long>>() {
                 @Override
                 public void flatMap(String message, Collector<Tuple3<String, Integer, Long>> record) {
@@ -55,6 +56,6 @@ public class WordCount {
             })
             .writeAsText(args[2], FileSystem.WriteMode.OVERWRITE);
 
-        environment.execute("FlinkWordCountApplication");
+        environment.execute("FWCA_" + System.currentTimeMillis());
     }
 }

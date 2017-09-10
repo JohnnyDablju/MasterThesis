@@ -9,13 +9,15 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Scanner;
 
+import static java.lang.Thread.sleep;
+
 public class WordCountProducer {
     public static void main(String[] args) throws Exception {
-        if (args == null){
+        if (args == null || args.length == 0){
             args = new String[3];
-            args[0] = "localhost:9092";
-            args[1] = "C:\\Git\\MasterThesis\\Experiments\\WordCount\\input.txt";
-            args[2] = "WordCountInput";
+            args[0] = "localhost:9092"; // brokers
+            args[1] = "WordCountInput"; // topic
+            args[2] = "C:\\Git\\MasterThesis\\deployment\\data\\0"; // input paths
         }
 
         Properties properties = new Properties();
@@ -24,20 +26,23 @@ public class WordCountProducer {
         properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
         properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
 
-        System.out.println("Loading input started...");
-        List<String> tweets = new ArrayList<>();
-        Scanner input = new Scanner(new File(args[1]));
-        while (input.hasNextLine()) {
-            tweets.add(input.nextLine());
-        }
-        System.out.printf("Loading input finished. %d records loaded.\n", tweets.size());
-
+        String[] files = args[2].split(",");
         Producer<String, String> producer = new KafkaProducer<>(properties);
-        for (int i = 0; i < tweets.size(); i++){
-            if (i % 999999 == 0) {
-                System.out.printf("%d records have been produced.\n", i + 1);
+        for (int i = 0; i < files.length; i++) {
+            System.out.printf("Loading input %d started...\n", i);
+            List<String> tweets = new ArrayList<>();
+            Scanner input = new Scanner(new File(files[i]));
+            while (input.hasNextLine()) {
+                tweets.add(input.nextLine());
             }
-            producer.send(new ProducerRecord<String, String>(args[2], tweets.get(i)));
+            System.out.printf("Loading input %d finished. %d records loaded.\n", i, tweets.size());
+
+            for (int j = 0; j < tweets.size()/8; j++) {
+                if (j % 10000 == 0) {
+                    System.out.printf("%d records have been produced.\n", j + 1);
+                }
+                producer.send(new ProducerRecord<String, String>(args[1], tweets.get(j)));
+            }
         }
         producer.close();
         System.out.println("Producing records finished.");

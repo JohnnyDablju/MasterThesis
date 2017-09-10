@@ -9,9 +9,12 @@ mkdir ${dataDir}/Flink
 # starting application
 ssh -i ${keyPairPath} ${masterHost} \
 ${packageDir}/flink/bin/flink run -d ${packageDir}/jars/Flink.jar \
-${kafkaHosts} 16 ${dataDir}/Flink
+${kafkaHosts} ${kafkaTopic} ${dataDir}/Flink 16
 # checking status
 pssh -i \
 -h ${streamHostsPath} \
 -x "-i ${keyPairPath}" \
 ls -l ${dataDir}/Flink
+# stopping cluster
+ssh -i ${keyPairPath} ${masterHost} \
+${packageDir}/flink/bin/stop-cluster.sh
