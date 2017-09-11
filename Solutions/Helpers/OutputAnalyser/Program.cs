@@ -35,7 +35,11 @@ namespace OutputAnalyser
             Console.WriteLine("{0}\tGetting processing start timestamp...", DateTime.Now);
             var startTimestamp = reader.GetStartTimestamp();
             Console.WriteLine("{0}\tStarting processing...", DateTime.Now);
-            var analysis = new Analysis(startTimestamp, wordsPerMessage);
+            var analysis = wordsPerMessage != 1
+                ? frameworkName == "Spark"
+                    ? new BatchAnalysis(startTimestamp) as Analysis
+                    : new CacheAnalysis(startTimestamp) as Analysis
+                : new Analysis(startTimestamp);
             var readManager = new ReadManager(reader, analysis);
             readManager.Process(startTimestamp);
             Console.WriteLine("{0}\tWriting report...", DateTime.Now);

@@ -2,29 +2,23 @@
 using System.Collections.Generic;
 using System.Linq;
 using OutputAnalyser.Entities;
-using System.Threading.Tasks;
-using Common;
 
 namespace OutputAnalyser
 {
     class Analysis
     {
-        public Analysis(long startTimestamp, int wordsPerMessage)
+        public Analysis(long startTimestamp)
         {
             this.startTimestamp = startTimestamp;
-            this.wordsPerMessage = wordsPerMessage;
             report = new List<ReportItem>();
-            countsBuffer = new Dictionary<string, int>();
         }
 
-        private int wordsPerMessage;
         private long startTimestamp;
-        private List<Message> messages;
+        protected List<Message> messages;
         private List<Batch> batches;
         private List<ReportItem> report;
-        private Dictionary<string, int> countsBuffer;
 
-        public void AddSecond(int second, List<Message> messages)
+        public bool AddSecond(int second, List<Message> messages)
         {
             if (messages.Count > 0)
             {
@@ -35,10 +29,12 @@ namespace OutputAnalyser
                 CompileBatches();
                 Console.WriteLine("{0}\t\t\tAdding to report...", DateTime.Now);
                 AddToReport(second);
+                return true;
             }
             else
             {
                 Console.WriteLine("{0}\t\t\tNo messages.", DateTime.Now);
+                return false;
             }
         }
 
@@ -47,33 +43,9 @@ namespace OutputAnalyser
             return report;
         }
 
-        private void PreprocessMessages()
+        protected virtual void PreprocessMessages()
         {
-            if (wordsPerMessage != 1)
-            {
-                messages = messages
-                    .OrderBy(m => m.Word)
-                    .ThenBy(m => m.TotalWordCount)
-                    .ToList();
-
-                messages[0].ProcessedWordCount = CalculateProcessedWordCount(messages[0]);
-                for (var i = 1; i < messages.Count; i++)
-                {
-                    if (messages[i].Word == messages[i - 1].Word)
-                    {
-                        messages[i].ProcessedWordCount = messages[i].TotalWordCount - messages[i - 1].TotalWordCount;
-                        HandleCountsBuffer(messages[i]);
-                    }
-                    else
-                    {
-                        messages[i].ProcessedWordCount = CalculateProcessedWordCount(messages[i]);
-                    }
-                }
-            }
-            else
-            {
-                messages.ForEach(m => m.ProcessedWordCount = 1);
-            }
+            messages.ForEach(m => m.ProcessedWordCount = m.TotalWordCount);
         }
 
         private void CompileBatches()
@@ -105,33 +77,6 @@ namespace OutputAnalyser
                     )
                 }
             );
-        }
-
-        private void HandleCountsBuffer(Message message)
-        {
-            if (!countsBuffer.ContainsKey(message.Word))
-            {
-                countsBuffer.Add(message.Word, message.TotalWordCount);
-            }
-            else
-            {
-                countsBuffer[message.Word] = message.TotalWordCount;
-            }
-        }
-
-        private int CalculateProcessedWordCount(Message message)
-        {
-            var count = 0;
-            if (countsBuffer.ContainsKey(message.Word))
-            {
-                count = message.TotalWordCount - countsBuffer[message.Word];
-            }
-            else
-            {
-                count = message.TotalWordCount;
-            }
-            HandleCountsBuffer(message);
-            return count;
         }
     }
 }

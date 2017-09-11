@@ -11,14 +11,17 @@ namespace OutputAnalyser.IO
 
         protected override void EnumerateFiles(Action action, long? timestampBoundary)
         {
-            foreach (var timestampDirectory in Directory.EnumerateDirectories(directory))
+            foreach (var timestampDirectory in Directory.EnumerateDirectories(directory + "/mt/data/Spark"))
             {
-                foreach (var filePath in Directory.EnumerateFiles(timestampDirectory))
+                foreach (var taskDirectory in Directory.EnumerateDirectories(timestampDirectory + "/_temporary/0"))
                 {
-                    var fileName = Path.GetFileName(filePath);
-                    if (fileName.Contains("part") && !fileName.Contains("crc"))
+                    foreach (var filePath in Directory.EnumerateFiles(taskDirectory))
                     {
-                        ProcessFile(action, filePath, timestampBoundary);
+                        var fileName = Path.GetFileName(filePath);
+                        if (fileName.Contains("part") && !fileName.Contains("crc"))
+                        {
+                            ProcessFile(action, filePath, timestampBoundary);
+                        }
                     }
                 }
             }

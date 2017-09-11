@@ -1,12 +1,12 @@
 # setting master in flink
-sed -i '$d' ${packageDir}/flink/conf/flink-conf.yaml
+sed -ie '$d' ${packageDir}/flink/conf/flink-conf.yaml
 echo 'jobmanager.rpc.address: '${masterIp} >> ${packageDir}/flink/conf/flink-conf.yaml
 echo ${masterIp}:8081 > ${packageDir}/flink/conf/masters
 # setting spark config
 sparkConfigPath=${packageDir}/spark/conf/spark-defaults.conf
-sed -i '$d' ${sparkConfigPath}
-sed -i '$d' ${sparkConfigPath}
-sed -i '$d' ${sparkConfigPath}
+sed -ie '$d' ${sparkConfigPath}
+sed -ie '$d' ${sparkConfigPath}
+sed -ie '$d' ${sparkConfigPath}
 printf "spark.master spark://${masterIp}:7077\n" >> ${sparkConfigPath}
 printf "spark.driver.extraClassPath ${packageDir}/jars/Spark/*\n" >> ${sparkConfigPath}
 printf "spark.executor.extraClassPath ${packageDir}/jars/Spark/*" >> ${sparkConfigPath}

@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace OutputAnalyser.IO
 {
@@ -22,11 +19,20 @@ namespace OutputAnalyser.IO
 
         public void Process(long startTimestamp)
         {
+            var noMessagesCounter = 0;
             foreach (var boundary in GetTimestampBoundaries(startTimestamp))
             {
                 Console.WriteLine("{0}\t\tGetting messages for second {1}...", DateTime.Now, boundary.Key);
                 var messages = reader.GetMessages(boundary.Value);
-                analysis.AddSecond(boundary.Key, messages);
+                noMessagesCounter =
+                    analysis.AddSecond(boundary.Key, messages)
+                    ? 0
+                    : noMessagesCounter + 1;
+                if (noMessagesCounter > 59)
+                {
+                    Console.WriteLine("{0}\t\tNo messages processed for a minute. Stopping...", DateTime.Now);
+                    break;
+                }
             }
         }
 
