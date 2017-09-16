@@ -45,7 +45,7 @@ namespace OutputAnalyser
 
         protected virtual void PreprocessMessages()
         {
-            messages.ForEach(m => m.ProcessedWordCount = m.TotalWordCount);
+            messages.ForEach(m => m.ProcessedWordCount = 1);
         }
 
         private void CompileBatches()
@@ -71,7 +71,7 @@ namespace OutputAnalyser
                     WordCount = batches.Sum(b => b.WordCount),
                     AverageLatency = Convert.ToInt32
                     (
-                        batches.Sum(b => (b.OutputTimestamp - b.InputTimestamp) * b.MessageCount) 
+                        batches.Sum(b => (b.OutputTimestamp - b.InputTimestamp) * b.MessageCount)
                         / 
                         batches.Sum(b => b.MessageCount)
                     )

@@ -9,20 +9,31 @@ namespace OutputAnalyser.IO
     {
         public SparkReader(string directory, char separator) : base(directory, separator) { }
 
+        private const string TEMPORARY_DIR = "_temporary/0";
+
         protected override void EnumerateFiles(Action action, long? timestampBoundary)
         {
-            foreach (var timestampDirectory in Directory.EnumerateDirectories(directory + "/mt/data/Spark"))
+            /*foreach (var timestampDirectory in Directory.EnumerateDirectories(directory))
             {
-                foreach (var taskDirectory in Directory.EnumerateDirectories(timestampDirectory + "/_temporary/0"))
-                {
-                    foreach (var filePath in Directory.EnumerateFiles(taskDirectory))
+                EnumerateInnerFiles(timestampDirectory, action, timestampBoundary);
+                if (Directory.Exists(timestampDirectory + TEMPORARY_PATH))
+                {*/
+                    foreach (var taskDirectory in Directory.EnumerateDirectories(Path.Combine(directory, TEMPORARY_DIR)))
                     {
-                        var fileName = Path.GetFileName(filePath);
-                        if (fileName.Contains("part") && !fileName.Contains("crc"))
-                        {
-                            ProcessFile(action, filePath, timestampBoundary);
-                        }
+                        EnumerateInnerFiles(taskDirectory, action, timestampBoundary);
                     }
+                /*}
+            }*/
+        }
+
+        private void EnumerateInnerFiles(string directory, Action action, long? timestampBoundary)
+        {
+            foreach (var filePath in Directory.EnumerateFiles(directory))
+            {
+                var fileName = Path.GetFileName(filePath);
+                if (fileName.Contains("part") && !fileName.Contains("crc"))
+                {
+                    ProcessFile(action, filePath, timestampBoundary);
                 }
             }
         }

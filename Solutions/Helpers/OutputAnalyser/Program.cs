@@ -17,10 +17,11 @@ namespace OutputAnalyser
             var outputSeparator = Convert.ToChar(ConfigurationManager.AppSettings["outputSeparator"].Replace("\\t", "\t"));
             var experimentDirectory = ConfigurationManager.AppSettings["experimentDirectory"];
             var analysisDirectory = Path.Combine(experimentDirectory, ConfigurationManager.AppSettings["analysisFolder"]);
-
             var frameworkName = ConfigurationManager.AppSettings["frameworkName"];
-            var frameworkDirectory = Path.Combine(experimentDirectory, frameworkName);
 
+            Console.WriteLine("Enter description:");
+            var description = Console.ReadLine();
+            var frameworkDirectory = Path.Combine(experimentDirectory, frameworkName, description);
             Reader reader = null; 
             switch (frameworkName)
             {
@@ -28,17 +29,15 @@ namespace OutputAnalyser
                 case "Spark": reader = new SparkReader(frameworkDirectory, outputSeparator); break;
                 case "Flink": reader = new FlinkReader(frameworkDirectory, outputSeparator); break;
             }
-            Console.WriteLine("Enter description:");
-            var description = Console.ReadLine();
             Console.WriteLine("Words per message?");
             var wordsPerMessage = Convert.ToInt32(Console.ReadLine());
             Console.WriteLine("{0}\tGetting processing start timestamp...", DateTime.Now);
             var startTimestamp = reader.GetStartTimestamp();
             Console.WriteLine("{0}\tStarting processing...", DateTime.Now);
             var analysis = wordsPerMessage != 1
-                ? frameworkName == "Spark"
-                    ? new BatchAnalysis(startTimestamp) as Analysis
-                    : new CacheAnalysis(startTimestamp) as Analysis
+                /*? frameworkName == "Spark"
+                    ? new BatchAnalysis(startTimestamp) as Analysis*/
+                ? new CacheAnalysis(startTimestamp) as Analysis
                 : new Analysis(startTimestamp);
             var readManager = new ReadManager(reader, analysis);
             readManager.Process(startTimestamp);

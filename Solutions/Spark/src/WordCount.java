@@ -19,14 +19,17 @@ import java.util.*;
 public class WordCount {
     public static void main(String[] args) throws Exception {
         if (args == null || args.length == 0){
-            args = new String[6];
+            args = new String[7];
             args[0] = "localhost:9092"; // brokers
             args[1] = "WordCountInput"; // topic
             args[2] = "C:\\Git\\MasterThesis\\experiments\\_singleWordCount\\Spark\\"; // output directory
             args[3] = "local[*]"; // master address
             args[4] = "1000"; // batch interval
-            args[5] = "C:\\Apache\\hadoop\\"; // hadoop directory
+            args[5] = "/tmp/spark-checkpoint"; // checkpoints directory
+            args[6] = "C:\\Apache\\hadoop\\"; // hadoop directory
         }
+        final String outputDirectory = args[2];
+        System.setProperty("hadoop.home.dir", args[6]);
 
         Map<String, Object> kafkaParams = new HashMap<>();
         kafkaParams.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, args[0]);
@@ -36,8 +39,6 @@ public class WordCount {
         kafkaParams.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         kafkaParams.put("enable.auto.commit", false);
 
-        System.setProperty("hadoop.home.dir", args[5]);
-
         Collection<String> topics = Arrays.asList(args[1]);
 
         SparkConf sparkConfig = new SparkConf()
@@ -45,8 +46,7 @@ public class WordCount {
             .setAppName("SWCA_" + System.currentTimeMillis());
 
         JavaStreamingContext streamingContext = new JavaStreamingContext(sparkConfig, new Duration(Integer.parseInt(args[4])));
-        streamingContext.checkpoint("/tmp/spark-checkpoint");
-
+        streamingContext.checkpoint(args[5]);
 
         KafkaUtils
             .createDirectStream(streamingContext, LocationStrategies.PreferConsistent(), ConsumerStrategies.<String, String>Subscribe(topics, kafkaParams))
@@ -62,6 +62,7 @@ public class WordCount {
                 }
             })
             .mapToPair(record -> new Tuple2<>(record._1, new Tuple2<>(1, record._2)))
+            //.reduceByKey((a, b) -> new Tuple2<>(a._1 + b._1, Math.max(a._2, b._2))) // used only for stateless processing
             .mapWithState(StateSpec.function(new Function3<String, Optional<Tuple2<Integer, Long>>, State<Tuple2<Integer, Long>>, Tuple2<String, Tuple2<Integer, Long>>>() {
                 @Override
                 public Tuple2<String, Tuple2<Integer, Long>> call(String word, Optional<Tuple2<Integer, Long>> optionalValue, State<Tuple2<Integer, Long>> state) throws Exception {
@@ -74,11 +75,8 @@ public class WordCount {
                     return new Tuple2<>(word, value);
                 }
             }))
-            //.reduceByKey((a, b) -> new Tuple2<>(a._1 + b._1, Math.max(a._2, b._2)))
             .map(record -> String.format("%d\t%d\t%s\t%d", record._2._2, System.currentTimeMillis(), record._1, record._2._1))
-            .dstream()
-            .saveAsTextFiles(args[2], "");
-
+            .foreachRDD(rdd -> rdd.saveAsTextFile(outputDirectory));
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override

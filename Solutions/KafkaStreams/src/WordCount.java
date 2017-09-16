@@ -29,6 +29,9 @@ public class WordCount {
         properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         properties.put(StreamsConfig.NUM_STREAM_THREADS_CONFIG, args[4]);
         properties.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, args[5]);
+        //properties.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, 30 * 60 * 1000);
+        //properties.put(ConsumerConfig.REQUEST_TIMEOUT_MS_CONFIG, 30 * 60 * 1000 + 1);
+        //properties.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, 30 * 60 * 1000);
         //properties.put(StreamsConfig.REPLICATION_FACTOR_CONFIG, 0);
         //properties.put(StreamsConfig.TIMESTAMP_EXTRACTOR_CLASS_CONFIG, WallclockTimestampExtractor.class);
 

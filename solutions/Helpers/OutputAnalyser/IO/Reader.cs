@@ -84,16 +84,25 @@ namespace OutputAnalyser.IO
             while (!reader.EndOfStream)
             {
                 var line = reader.ReadLine();
-                var message = GetMessage(line);
-                if (message.OutputTimestamp <= boundaryTimestamp.Value)
+                try
                 {
-                    messages.Add(message);
-                    position += (line.Length + 1);
+                    var message = GetMessage(line);
+                    if (message.OutputTimestamp <= boundaryTimestamp.Value)
+                    {
+                        messages.Add(message);
+                        position += (line.Length + 1);
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    break;
+                    Console.WriteLine("{0}\t\t\t\tFile corrupted, position {1}, line {2}", DateTime.Now, position, line);
+                    continue;
                 }
+                
             }
             return position.Value;
         }

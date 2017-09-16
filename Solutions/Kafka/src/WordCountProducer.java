@@ -13,11 +13,12 @@ import static java.lang.Thread.sleep;
 
 public class WordCountProducer {
     public static void main(String[] args) throws Exception {
-        if (args == null || args.length == 0){
+        if (args == null || args.length == 0) {
             args = new String[3];
             args[0] = "localhost:9092"; // brokers
             args[1] = "WordCountInput"; // topic
             args[2] = "C:\\Git\\MasterThesis\\deployment\\data\\0"; // input paths
+            args[3] = "14"; // production rate
         }
 
         Properties properties = new Properties();
@@ -27,24 +28,28 @@ public class WordCountProducer {
         properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
 
         String[] files = args[2].split(",");
+        int productionRate = Integer.parseInt(args[3]);
+        int counter = 0;
         Producer<String, String> producer = new KafkaProducer<>(properties);
+
+        Long startTimestamp = System.currentTimeMillis();
         for (int i = 0; i < files.length; i++) {
             System.out.printf("Loading input %d started...\n", i);
-            List<String> tweets = new ArrayList<>();
             Scanner input = new Scanner(new File(files[i]));
             while (input.hasNextLine()) {
-                tweets.add(input.nextLine());
-            }
-            System.out.printf("Loading input %d finished. %d records loaded.\n", i, tweets.size());
-
-            for (int j = 0; j < tweets.size()/8; j++) {
-                if (j % 10000 == 0) {
-                    System.out.printf("%d records have been produced.\n", j + 1);
+                producer.send(new ProducerRecord<String, String>(args[1], input.nextLine()));
+                if (counter % productionRate == 0){
+                    sleep(1);
+                    if (counter % 5000 == 0){
+                        System.out.printf("%d records have been produced.\n", counter);
+                    }
                 }
-                producer.send(new ProducerRecord<String, String>(args[1], tweets.get(j)));
+                counter++;
             }
+            System.out.printf("Loading input %d finished.\n", i);
         }
         producer.close();
-        System.out.println("Producing records finished.");
+
+        System.out.printf("Producing records finished in %d.\n", System.currentTimeMillis() - startTimestamp);
     }
 }

@@ -40,13 +40,15 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Analysis\CacheAnalysis.cs" />
+    <Compile Include="Analysis\BatchAnalysis.cs" />
     <Compile Include="Entities\ReportItem.cs" />
     <Compile Include="IO\ReadManager.cs" />
     <Compile Include="IO\Reader\KafkaStreamsReader.cs" />
     <Compile Include="IO\Reader\FlinkReader.cs" />
     <Compile Include="IO\Reader\SparkReader.cs" />
     <Compile Include="IO\Writer.cs" />
-    <Compile Include="Analysis.cs" />
+    <Compile Include="Analysis\Analysis.cs" />
     <Compile Include="Entities\Message.cs" />
     <Compile Include="Entities\Batch.cs" />
     <Compile Include="Program.cs" />

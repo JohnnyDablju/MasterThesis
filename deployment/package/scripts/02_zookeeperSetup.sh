@@ -1,11 +1,12 @@
 # setting up variables
 user="ec2-user"
+efsDns="fs-5c22ca25.efs.us-east-2.amazonaws.com"
 # zookeeper
-zookeeperIp="172.31.1.58"
+zookeeperIp="172.31.8.242"
 zookeeperFullIp=${zookeeperIp}":2181"
 zookeeperHost=${user}@${zookeeperIp}
 # other ips
-masterIp="172.31.7.38"
+masterIp="172.31.4.138"
 masterHost=${user}@${masterIp}
 # directories
 packageDir="/mt/package"
