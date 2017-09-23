@@ -4,21 +4,19 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
 import java.util.Scanner;
 
 import static java.lang.Thread.sleep;
 
-public class WordCountProducer {
+public class TweetsProducer {
     public static void main(String[] args) throws Exception {
         if (args == null || args.length == 0) {
-            args = new String[3];
+            args = new String[4];
             args[0] = "localhost:9092"; // brokers
-            args[1] = "WordCountInput"; // topic
+            args[1] = "TwitterKSd"; // topic
             args[2] = "C:\\Git\\MasterThesis\\deployment\\data\\0"; // input paths
-            args[3] = "14"; // production rate
+            args[3] = "8"; // production rate
         }
 
         Properties properties = new Properties();
@@ -31,12 +29,10 @@ public class WordCountProducer {
         int productionRate = Integer.parseInt(args[3]);
         int counter = 0;
         Producer<String, String> producer = new KafkaProducer<>(properties);
-
-        Long startTimestamp = System.currentTimeMillis();
         for (int i = 0; i < files.length; i++) {
             System.out.printf("Loading input %d started...\n", i);
             Scanner input = new Scanner(new File(files[i]));
-            while (input.hasNextLine()) {
+            while (input.hasNextLine() && counter < 300000) {
                 producer.send(new ProducerRecord<String, String>(args[1], input.nextLine()));
                 if (counter % productionRate == 0){
                     sleep(1);
@@ -49,7 +45,5 @@ public class WordCountProducer {
             System.out.printf("Loading input %d finished.\n", i);
         }
         producer.close();
-
-        System.out.printf("Producing records finished in %d.\n", System.currentTimeMillis() - startTimestamp);
     }
 }
