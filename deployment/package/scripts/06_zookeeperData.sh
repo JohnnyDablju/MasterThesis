@@ -3,11 +3,11 @@ pssh -i \
 -h ${streamHostsPath} \
 -x "-i ${keyPairPath}" \
 scp -o StrictHostKeyChecking=no -i ${keyPairPath} -rp \
-${dataDir}/KafkaStreams ${zookeeperHost}:${dataDir}
+${dataDir}/Spark ${zookeeperHost}:${dataDir}
 # removing data from remote nodes
 pssh -i \
 -h ${streamHostsPath} \
 -x "-i ${keyPairPath}" \
-rm -rf ${dataDir}/Flink
+rm -rf ${dataDir}/Spark
 # zipping data
-tar -cjf ${dataDir}/output.tar.bz2 ${dataDir}/Spark
+tar -cjf ${dataDir}/spark.tar.bz2 ${dataDir}/Spark

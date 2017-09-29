@@ -15,10 +15,10 @@ public class WordCount {
     public static void main(String[] args) throws Exception {
         if (args == null || args.length == 0){
             args = new String[4];
-            args[0] = "localhost:9092";
-            args[1] = "WordCountInput";
-            args[2] = "C:\\Git\\MasterThesis\\experiments\\_singleWordCount\\Flink";
-            args[3] = "4";
+            args[0] = "localhost:9092"; // brokers
+            args[1] = "WordCountInput"; // topic
+            args[2] = "C:\\Git\\MasterThesis\\experiments\\_singleWordCount\\Flink"; // output directory
+            args[3] = "4"; // parallelism
         }
 
         Properties properties = new Properties();

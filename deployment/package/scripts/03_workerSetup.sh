@@ -24,6 +24,7 @@ done
 copyPackage(){
 ssh -i ${keyPairPath} -o StrictHostKeyChecking=no ${1} "sudo mkdir -p /mt/data; sudo chown -R ${user} /mt" < /dev/null
 scp -i ${keyPairPath} -o StrictHostKeyChecking=no -pqr ${packageDir} ${1}:/mt
+scp -i ${keyPairPath} -o StrictHostKeyChecking=no -pqr ${dataDir}/companies ${1}:${dataDir}
 ssh -i ${keyPairPath} ${1} "sudo chown -R ${user} /mt" < /dev/null
 }
 copyPackage ${masterHost}
@@ -51,3 +52,4 @@ ssh -i ${keyPairPath} ${masterHost} \
 "scp -o StrictHostKeyChecking=no -i ${keyPairPath} .ssh/authorized_keys ${host}:~/.ssh/" \
 < /dev/null
 done < ${packageDir}/config/stream.hosts
+

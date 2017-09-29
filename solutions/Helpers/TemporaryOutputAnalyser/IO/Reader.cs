@@ -90,7 +90,7 @@ namespace StockTweetJoinOutputAnalyser.IO
                     {
                         messages.Add(message);
                         // change below when using Linux/Windows
-                        position += (line.Length + 2);
+                        position += (line.Length + 1);
                     }
                     else
                     {

@@ -14,7 +14,7 @@ public class StocksProducer {
         if (args == null || args.length == 0) {
             args = new String[3];
             args[0] = "localhost:9092"; // brokers
-            args[1] = "NasdaqKSd"; // topic
+            args[1] = "NasdaqKS"; // topic
             args[2] = "C:\\Git\\MasterThesis\\deployment\\data\\companies"; // input path
         }
 

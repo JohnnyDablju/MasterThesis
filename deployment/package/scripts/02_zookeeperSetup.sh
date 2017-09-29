@@ -1,12 +1,12 @@
 # setting up variables
 user="ec2-user"
-efsDns="fs-5c22ca25.efs.us-east-2.amazonaws.com"
+efsDns="fs-ef3dd696.efs.us-east-2.amazonaws.com"
 # zookeeper
-zookeeperIp="172.31.8.242"
+zookeeperIp="172.31.8.252"
 zookeeperFullIp=${zookeeperIp}":2181"
 zookeeperHost=${user}@${zookeeperIp}
 # other ips
-masterIp="172.31.4.138"
+masterIp="172.31.9.191"
 masterHost=${user}@${masterIp}
 # directories
 packageDir="/mt/package"
@@ -20,6 +20,8 @@ kafkaHosts=${kafkaHosts}${host#*@}":9092,"
 done < ${packageDir}/config/kafka.hosts
 kafkaHosts=${kafkaHosts::-1}
 # kafka
+tweetsTopic="Twitter"
+stocksTopic="Nasdaq"
 kafkaTopic="WordCountInput"
 # paths
 keyPairPath=${packageDir}"/keyPairs/MTKeyPairEC2Ohio.pem"

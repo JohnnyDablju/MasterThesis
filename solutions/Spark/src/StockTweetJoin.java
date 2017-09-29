@@ -2,17 +2,11 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.Optional;
-import org.apache.spark.api.java.function.FlatMapFunction;
-import org.apache.spark.api.java.function.Function3;
 import org.apache.spark.api.java.function.PairFunction;
 import org.apache.spark.streaming.Duration;
-import org.apache.spark.streaming.State;
-import org.apache.spark.streaming.StateSpec;
-import org.apache.spark.streaming.api.java.JavaInputDStream;
+import org.apache.spark.streaming.Durations;
 import org.apache.spark.streaming.api.java.JavaPairDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
-import org.apache.spark.streaming.dstream.InputDStream;
 import org.apache.spark.streaming.kafka010.ConsumerStrategies;
 import org.apache.spark.streaming.kafka010.KafkaUtils;
 import org.apache.spark.streaming.kafka010.LocationStrategies;
@@ -34,6 +28,7 @@ public class StockTweetJoin {
             args[6] = "/tmp/spark-checkpoint"; // checkpoints directory
             args[7] = "C:\\Apache\\hadoop\\"; // hadoop directory
         }
+
         final String outputDirectory = args[2];
         System.setProperty("hadoop.home.dir", args[7]);
         String[] topics = args[1].split(",");
@@ -84,8 +79,7 @@ public class StockTweetJoin {
                     return new Tuple2<>(companyIndex, currentTimestamp);
                 }
             })
-            .filter(record -> record._1 != null)
-            .window(new Duration(10000));
+            .filter(record -> record._1 != null);
 
         JavaPairDStream<String, Long> stocks = KafkaUtils
             .createDirectStream(streamingContext, LocationStrategies.PreferConsistent(), ConsumerStrategies.<String, String>Subscribe(Arrays.asList(topics[1]), kafkaParams))
@@ -94,13 +88,13 @@ public class StockTweetJoin {
                 public Tuple2<String, Long> call(ConsumerRecord<String, String> record) throws Exception {
                     return new Tuple2<>(record.value().split("\t")[0], System.currentTimeMillis());
                 }
-            })
-            .window(new Duration(10000));
+            });
 
         tweets
             .join(stocks)
+            .window(Durations.seconds(10))
             .mapValues(record -> String.format("%d\t%d\t%d", record._1, record._2, System.currentTimeMillis()))
-            .foreachRDD(rdd -> rdd.saveAsTextFile(outputDirectory));
+            .foreachRDD(record -> record.saveAsTextFile(outputDirectory));
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override

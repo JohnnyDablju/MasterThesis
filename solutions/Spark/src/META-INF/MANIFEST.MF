@@ -54,5 +54,5 @@ Class-Path: spark-streaming-kafka-0-10_2.11-2.2.0.jar spark-streaming_
  .1.2.jar metrics-json-3.1.2.jar metrics-graphite-3.1.2.jar jackson-mo
  dule-scala_2.11-2.6.5.jar jackson-module-paranamer-2.6.5.jar ivy-2.4.
  0.jar oro-2.0.8.jar pyrolite-4.13.jar py4j-0.10.4.jar
-Main-Class: WordCount
+Main-Class: StockTweetJoin
 

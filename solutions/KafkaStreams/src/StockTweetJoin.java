@@ -1,10 +1,10 @@
 import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.kstream.*;
+import org.apache.kafka.streams.processor.WallclockTimestampExtractor;
 
 import java.io.File;
 import java.util.*;
@@ -16,7 +16,7 @@ public class StockTweetJoin
         if (args == null || args.length == 0){
             args = new String[8];
             args[0] = "localhost:9092"; // brokers
-            args[1] = "TwitterKSd,NasdaqKSd"; // tweets,stocks topics
+            args[1] = "TwitterKS,NasdaqKS"; // tweets,stocks topics
             args[2] = "C:\\Git\\MasterThesis\\experiments\\_singleStockTweetJoin\\KafkaStreams\\"; // output directory
             args[3] = "C:\\Git\\MasterThesis\\deployment\\data\\companies"; // companies file
             args[4] = "0"; // client id / output file name
@@ -36,6 +36,7 @@ public class StockTweetJoin
         properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         properties.put(StreamsConfig.NUM_STREAM_THREADS_CONFIG, args[5]);
         properties.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, args[6]);
+        properties.put(StreamsConfig.TIMESTAMP_EXTRACTOR_CLASS_CONFIG, WallclockTimestampExtractor.class);
 
         Map<String, String[]> companies = new HashMap<>();
         Scanner scanner = new Scanner(new File(args[3]));
@@ -87,7 +88,7 @@ public class StockTweetJoin
                 public String apply(Long tweetTimestamp, Long stockTimestamp) {
                     return String.format("%d\t%d", tweetTimestamp, stockTimestamp);
                 }
-            }, JoinWindows.of(TimeUnit.SECONDS.toMillis(5)), Serdes.String(), Serdes.Long(), Serdes.Long())
+            },  JoinWindows.of(TimeUnit.SECONDS.toMillis(5)), Serdes.String(), Serdes.Long(), Serdes.Long())
             .mapValues(record -> String.format("%s\t%d", record, System.currentTimeMillis()))
             .writeAsText(args[2] + args[4]);
 

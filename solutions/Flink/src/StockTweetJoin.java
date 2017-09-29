@@ -1,10 +1,7 @@
-import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.common.functions.JoinFunction;
 import org.apache.flink.api.common.functions.MapFunction;
-import org.apache.flink.api.common.functions.ReduceFunction;
 import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.core.fs.FileSystem;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
@@ -13,8 +10,6 @@ import org.apache.flink.streaming.api.windowing.assigners.TumblingProcessingTime
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer010;
 import org.apache.flink.streaming.util.serialization.SimpleStringSchema;
-import org.apache.flink.streaming.util.serialization.TypeInformationKeyValueSerializationSchema;
-import org.apache.flink.util.Collector;
 
 import java.io.File;
 import java.util.*;
@@ -24,7 +19,7 @@ public class StockTweetJoin {
         if (args == null || args.length == 0){
             args = new String[5];
             args[0] = "localhost:9092"; // brokers
-            args[1] = "TwitterFb,NasdaqFb"; // topics
+            args[1] = "TwitterF,NasdaqF"; // topics
             args[2] = "C:\\Git\\MasterThesis\\experiments\\_singleStockTweetJoin\\Flink"; // output directory
             args[3] = "C:\\Git\\MasterThesis\\deployment\\data\\companies"; // companies file path
             args[4] = "4"; // parallelism
@@ -46,7 +41,7 @@ public class StockTweetJoin {
 
         StreamExecutionEnvironment environment = StreamExecutionEnvironment.getExecutionEnvironment();
         environment.setParallelism(Integer.parseInt(args[4]));
-        environment.setStreamTimeCharacteristic(TimeCharacteristic.IngestionTime);
+        environment.setStreamTimeCharacteristic(TimeCharacteristic.ProcessingTime);
 
         SingleOutputStreamOperator<Tuple2<String, Long>> tweets = environment
             .addSource(new FlinkKafkaConsumer010<>(topics[0], new SimpleStringSchema(), properties))

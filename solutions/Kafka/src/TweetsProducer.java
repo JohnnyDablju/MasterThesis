@@ -14,7 +14,7 @@ public class TweetsProducer {
         if (args == null || args.length == 0) {
             args = new String[4];
             args[0] = "localhost:9092"; // brokers
-            args[1] = "TwitterKSd"; // topic
+            args[1] = "TwitterKS"; // topic
             args[2] = "C:\\Git\\MasterThesis\\deployment\\data\\0"; // input paths
             args[3] = "8"; // production rate
         }
@@ -32,7 +32,7 @@ public class TweetsProducer {
         for (int i = 0; i < files.length; i++) {
             System.out.printf("Loading input %d started...\n", i);
             Scanner input = new Scanner(new File(files[i]));
-            while (input.hasNextLine() && counter < 300000) {
+            while (input.hasNextLine()) {
                 producer.send(new ProducerRecord<String, String>(args[1], input.nextLine()));
                 if (counter % productionRate == 0){
                     sleep(1);

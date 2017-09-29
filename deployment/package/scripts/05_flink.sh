@@ -6,10 +6,14 @@ pssh -i \
 -h ${streamHostsPath} \
 -x "-i ${keyPairPath}" \
 mkdir ${dataDir}/Flink
-# starting application
+# starting WordCount application
 ssh -i ${keyPairPath} ${masterHost} \
 ${packageDir}/flink/bin/flink run -d ${packageDir}/jars/Flink.jar \
-${kafkaHosts} ${kafkaTopic} ${dataDir}/Flink 16
+${kafkaHosts} ${kafkaTopic}Fa ${dataDir}/Flink 16
+# starting StockTweetJoin application
+ssh -i ${keyPairPath} ${masterHost} \
+${packageDir}/flink/bin/flink run -d ${packageDir}/jars/Flink.jar \
+${kafkaHosts} ${tweetsTopic}Fa,${stocksTopic}Fa ${dataDir}/Flink ${dataDir}/companies 16
 # checking status
 pssh -i \
 -h ${streamHostsPath} \
